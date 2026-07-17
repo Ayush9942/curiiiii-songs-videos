@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Play, Pause, RotateCcw, Volume2, Music, Video as VideoIcon, ExternalLink } from 'lucide-react';
 import { MediaItem } from '../types';
-import { getAccessToken } from '../firebase';
 
 interface CustomPlayerProps {
   item: MediaItem | null;
@@ -12,8 +11,7 @@ export default function CustomPlayer({ item, onClose }: CustomPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
-  const [resolvedUrl, setResolvedUrl] = useState('');
-  const [authError, setAuthError] = useState(false);
+  const [playerError, setPlayerError] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Reset player state when selected item changes
@@ -21,34 +19,10 @@ export default function CustomPlayer({ item, onClose }: CustomPlayerProps) {
     setIsPlaying(false);
     setCurrentTime(0);
     setDuration(0);
-    setAuthError(false);
-    
+    setPlayerError(null);
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.load();
-    }
-
-    if (!item) {
-      setResolvedUrl('');
-      return;
-    }
-
-    if (item.url.startsWith('drive://')) {
-      const fileId = item.url.replace('drive://', '');
-      getAccessToken().then(token => {
-        if (token) {
-          setResolvedUrl(`/api/drive/stream?fileId=${fileId}&token=${token}`);
-        } else {
-          setResolvedUrl('');
-          setAuthError(true);
-        }
-      }).catch(err => {
-        console.error('Error getting access token:', err);
-        setResolvedUrl('');
-        setAuthError(true);
-      });
-    } else {
-      setResolvedUrl(item.url);
     }
   }, [item]);
 
@@ -88,6 +62,10 @@ export default function CustomPlayer({ item, onClose }: CustomPlayerProps) {
 
   const ytId = getYouTubeId(item.url);
   const instaUrl = getInstagramEmbedUrl(item.url);
+
+  const handleMediaError = () => {
+    setPlayerError("This older media file is no longer available on the server's local ephemeral storage. Please re-upload it to play!");
+  };
 
   // Audio Playback Controls
   const togglePlay = () => {
@@ -161,15 +139,19 @@ export default function CustomPlayer({ item, onClose }: CustomPlayerProps) {
 
       {/* Media Rendering Area */}
       <div className="relative rounded-none bg-black border border-white/5 overflow-hidden flex items-center justify-center mb-4 aspect-video">
-        {authError ? (
-          <div className="absolute inset-0 bg-[#0a0a0a] flex flex-col items-center justify-center p-6 text-center">
-            <Volume2 className="w-8 h-8 text-stone-500 mb-2 animate-pulse" />
-            <p className="text-xs text-stone-300 font-sans uppercase tracking-wider mb-1">Authorization Required</p>
-            <p className="text-[11px] text-stone-500 max-w-xs font-serif italic">
-              Please sign in with Google in the "Creative Archive" panel below to stream this media.
+        {playerError && (
+          <div className="absolute inset-0 bg-black/95 flex flex-col items-center justify-center p-6 text-center z-10 animate-fade-in">
+            <div className="w-10 h-10 rounded-none bg-red-950/40 border border-red-500/20 flex items-center justify-center text-red-400 mb-3">
+              <span className="text-sm">⚠️</span>
+            </div>
+            <h4 className="text-red-400 text-[10px] uppercase tracking-[0.2em] font-semibold mb-2 font-sans">Media Offline</h4>
+            <p className="text-[11px] text-stone-400 max-w-xs font-serif italic leading-relaxed">
+              {playerError}
             </p>
           </div>
-        ) : item.type === 'video' ? (
+        )}
+
+        {item.type === 'video' ? (
           ytId ? (
             <iframe
               src={`https://www.youtube.com/embed/${ytId}?autoplay=1`}
@@ -190,11 +172,12 @@ export default function CustomPlayer({ item, onClose }: CustomPlayerProps) {
             />
           ) : (
             <video
-              src={resolvedUrl}
+              src={item.url}
               controls
               autoPlay
               className="absolute inset-0 w-full h-full object-contain"
               id="html5-video-player"
+              onError={handleMediaError}
             />
           )
         ) : (
@@ -203,10 +186,11 @@ export default function CustomPlayer({ item, onClose }: CustomPlayerProps) {
             {/* Audio tag */}
             <audio
               ref={audioRef}
-              src={resolvedUrl}
+              src={item.url}
               onTimeUpdate={handleTimeUpdate}
               onLoadedMetadata={handleLoadedMetadata}
               onEnded={() => setIsPlaying(false)}
+              onError={handleMediaError}
             />
 
             {/* Rotating Vinyl/Record Graphic */}
@@ -238,11 +222,7 @@ export default function CustomPlayer({ item, onClose }: CustomPlayerProps) {
                   className="w-1 bg-stone-400 rounded-none"
                   style={{
                     height: isPlaying ? '100%' : '15%',
-                    animationName: isPlaying ? 'bounce' : 'none',
-                    animationDuration: '1.2s',
-                    animationTimingFunction: 'ease-in-out',
-                    animationIterationCount: 'infinite',
-                    animationDirection: 'alternate',
+                    animation: isPlaying ? `bounce 1.2s ease-in-out infinite alternate` : 'none',
                     animationDelay: `${i * 0.12}s`,
                     transformOrigin: 'bottom',
                   }}

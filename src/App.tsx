@@ -6,8 +6,7 @@ import BirthdayHero from './components/BirthdayHero';
 import CustomPlayer from './components/CustomPlayer';
 import MediaGallery from './components/MediaGallery';
 import WishesSection from './components/WishesSection';
-import { initAuth, googleSignIn, logout } from './firebase';
-import { User } from 'firebase/auth';
+import DeleteConfirmModal from './components/DeleteConfirmModal';
 
 interface Particle {
   id: number;
@@ -26,49 +25,13 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Firebase Auth states
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
-
-  useEffect(() => {
-    const unsubscribe = initAuth(
-      (currentUser, currentToken) => {
-        setUser(currentUser);
-        setToken(currentToken);
-      },
-      () => {
-        setUser(null);
-        setToken(null);
-      }
-    );
-    return () => unsubscribe();
-  }, []);
-
-  const handleLogin = async () => {
-    setIsLoggingIn(true);
-    try {
-      const result = await googleSignIn();
-      if (result) {
-        setUser(result.user);
-        setToken(result.accessToken);
-      }
-    } catch (err: any) {
-      console.error('Google login failed:', err);
-    } finally {
-      setIsLoggingIn(false);
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-      setUser(null);
-      setToken(null);
-    } catch (err) {
-      console.error('Logout failed:', err);
-    }
-  };
+  // Delete confirm modal state
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    id: string;
+    type: 'song' | 'video' | 'wish';
+    title: string;
+  } | null>(null);
 
   // Fetch initial data
   useEffect(() => {
@@ -124,11 +87,14 @@ export default function App() {
   };
 
   // Add a birthday wish
-  const handleAddWish = async (sender: string, message: string) => {
+  const handleAddWish = async (sender: string, message: string, passcode: string) => {
     const res = await fetch('/api/wishes', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sender, message })
+      headers: { 
+        'Content-Type': 'application/json',
+        'x-passcode': passcode
+      },
+      body: JSON.stringify({ sender, message, passcode })
     });
     if (!res.ok) {
       const err = await res.json();
@@ -140,12 +106,14 @@ export default function App() {
   };
 
   // Delete a wish
-  const handleDeleteWish = async (id: string) => {
+  const handleDeleteWish = async (id: string, passcode: string) => {
     const res = await fetch(`/api/wishes/${id}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: { 'x-passcode': passcode }
     });
     if (!res.ok) {
-      throw new Error('Failed to delete wish');
+      const err = await res.json();
+      throw new Error(err.error || 'Failed to delete wish');
     }
     setWishes(prev => prev.filter(w => w.id !== id));
   };
@@ -167,11 +135,14 @@ export default function App() {
   };
 
   // Add external media URL link
-  const handleAddLink = async (title: string, description: string, type: 'audio' | 'video', url: string) => {
+  const handleAddLink = async (title: string, description: string, type: 'audio' | 'video', url: string, passcode: string) => {
     const res = await fetch('/api/media/url', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, description, type, url })
+      headers: { 
+        'Content-Type': 'application/json',
+        'x-passcode': passcode
+      },
+      body: JSON.stringify({ title, description, type, url, passcode })
     });
     if (!res.ok) {
       const err = await res.json();
@@ -184,17 +155,50 @@ export default function App() {
   };
 
   // Delete a media item
-  const handleDeleteItem = async (id: string) => {
+  const handleDeleteItem = async (id: string, passcode: string) => {
     const res = await fetch(`/api/media/${id}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: { 'x-passcode': passcode }
     });
     if (!res.ok) {
-      throw new Error('Failed to delete media');
+      const err = await res.json();
+      throw new Error(err.error || 'Failed to delete media');
     }
     setMediaItems(prev => prev.filter(m => m.id !== id));
     // Clear selected media if we deleted it
     if (selectedMedia?.id === id) {
       setSelectedMedia(null);
+    }
+  };
+
+  const promptDeleteWish = (id: string) => {
+    const wish = wishes.find(w => w.id === id);
+    if (!wish) return;
+    setDeleteTarget({
+      id,
+      type: 'wish',
+      title: `${wish.sender}: ${wish.message.substring(0, 30)}${wish.message.length > 30 ? '...' : ''}`
+    });
+    setDeleteModalOpen(true);
+  };
+
+  const promptDeleteItem = (id: string) => {
+    const item = mediaItems.find(m => m.id === id);
+    if (!item) return;
+    setDeleteTarget({
+      id,
+      type: item.type === 'audio' ? 'song' : 'video',
+      title: item.title
+    });
+    setDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async (passcode: string) => {
+    if (!deleteTarget) return;
+    if (deleteTarget.type === 'wish') {
+      await handleDeleteWish(deleteTarget.id, passcode);
+    } else {
+      await handleDeleteItem(deleteTarget.id, passcode);
     }
   };
 
@@ -292,12 +296,7 @@ export default function App() {
                   onSelectItem={setSelectedMedia}
                   onUploadFile={handleUploadFile}
                   onAddLink={handleAddLink}
-                  onDeleteItem={handleDeleteItem}
-                  user={user}
-                  token={token}
-                  onLogin={handleLogin}
-                  onLogout={handleLogout}
-                  isLoggingIn={isLoggingIn}
+                  onDeleteItem={promptDeleteItem}
                 />
               </div>
             </div>
@@ -306,8 +305,24 @@ export default function App() {
             <WishesSection
               wishes={wishes}
               onAddWish={handleAddWish}
-              onDeleteWish={handleDeleteWish}
+              onDeleteWish={promptDeleteWish}
             />
+
+            {/* Delete Confirmation Modal */}
+            <AnimatePresence>
+              {deleteModalOpen && deleteTarget && (
+                <DeleteConfirmModal
+                  isOpen={deleteModalOpen}
+                  onClose={() => {
+                    setDeleteModalOpen(false);
+                    setDeleteTarget(null);
+                  }}
+                  onConfirm={handleConfirmDelete}
+                  title={deleteTarget.title}
+                  itemType={deleteTarget.type}
+                />
+              )}
+            </AnimatePresence>
           </>
         )}
       </main>

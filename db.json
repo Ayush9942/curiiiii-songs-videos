@@ -27,24 +27,6 @@
   ],
   "media": [
     {
-      "id": "demo-song",
-      "title": "Acoustic Joy (Demo Song)",
-      "description": "A warm, uplifting acoustic track to set the birthday celebration mood.",
-      "type": "audio",
-      "url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-      "fileName": "SoundHelix-Song-1.mp3",
-      "date": "2026-07-16"
-    },
-    {
-      "id": "demo-video",
-      "title": "Sparkler Celebration (Demo Video)",
-      "description": "A beautiful video of birthday sparklers to bring some magical light to your day.",
-      "type": "video",
-      "url": "https://assets.mixkit.co/videos/preview/mixkit-celebration-with-sparklers-and-champagne-3897-large.mp4",
-      "fileName": "mixkit-celebration.mp4",
-      "date": "2026-07-16"
-    },
-    {
       "id": "upload-1784258528672",
       "title": "Ya tune kya kiye✨🎶🍂",
       "description": "haye kya aawaj h meri bhen ki 🤌",

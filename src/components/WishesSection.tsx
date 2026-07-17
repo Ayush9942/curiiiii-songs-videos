@@ -5,8 +5,8 @@ import { Wish } from '../types';
 
 interface WishesSectionProps {
   wishes: Wish[];
-  onAddWish: (sender: string, message: string) => Promise<void>;
-  onDeleteWish?: (id: string) => Promise<void>;
+  onAddWish: (sender: string, message: string, passcode: string) => Promise<void>;
+  onDeleteWish?: (id: string) => void;
 }
 
 export default function WishesSection({ wishes, onAddWish, onDeleteWish }: WishesSectionProps) {
@@ -30,7 +30,7 @@ export default function WishesSection({ wishes, onAddWish, onDeleteWish }: Wishe
     setError('');
     setIsSubmitting(true);
     try {
-      await onAddWish(sender.trim(), message.trim());
+      await onAddWish(sender.trim(), message.trim(), passcode);
       setSender('');
       setMessage('');
       setSuccess(true);

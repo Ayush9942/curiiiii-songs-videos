@@ -202,7 +202,11 @@ export default function CustomPlayer({ item, onClose }: CustomPlayerProps) {
                   className="w-1 bg-stone-400 rounded-none"
                   style={{
                     height: isPlaying ? '100%' : '15%',
-                    animation: isPlaying ? `bounce 1.2s ease-in-out infinite alternate` : 'none',
+                    animationName: isPlaying ? 'bounce' : 'none',
+                    animationDuration: '1.2s',
+                    animationTimingFunction: 'ease-in-out',
+                    animationIterationCount: 'infinite',
+                    animationDirection: 'alternate',
                     animationDelay: `${i * 0.12}s`,
                     transformOrigin: 'bottom',
                   }}

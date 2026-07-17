@@ -15,16 +15,10 @@ const PORT = 3000;
 const isVercel = !!process.env.VERCEL || !!process.env.VERCEL_ENV;
 const baseDir = isVercel ? '/tmp' : process.cwd();
 
-// In development/local, write to public/uploads; fallback to /tmp or root uploads in production
-let uploadsDir = path.join(process.cwd(), 'public', 'uploads');
-if (!fs.existsSync(path.join(process.cwd(), 'public'))) {
-  const distPath = path.join(process.cwd(), 'dist');
-  if (fs.existsSync(distPath)) {
-    uploadsDir = path.join(distPath, 'uploads');
-  } else {
-    uploadsDir = path.join(baseDir, 'uploads');
-  }
-}
+// In Vercel, write to /tmp/uploads; locally write to public/uploads
+const uploadsDir = isVercel 
+  ? path.join('/tmp', 'uploads') 
+  : path.join(process.cwd(), 'public', 'uploads');
 
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
@@ -96,8 +90,10 @@ const upload = multer({
   }
 });
 
-// Serve uploads statically
-app.use('/uploads', express.static(uploadsDir));
+// Serve uploads statically from multiple locations for absolute Vercel compatibility
+app.use('/uploads', express.static(path.join(process.cwd(), 'public', 'uploads')));
+app.use('/uploads', express.static(path.join(process.cwd(), 'dist', 'uploads')));
+app.use('/uploads', express.static(path.join('/tmp', 'uploads')));
 
 // Parse JSON bodies
 app.use(express.json());

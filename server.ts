@@ -100,6 +100,69 @@ app.use(express.json());
 
 // --- API Routes ---
 
+// Stream from Google Drive
+app.get('/api/drive/stream', async (req, res) => {
+  const { fileId, token } = req.query;
+  if (!fileId || !token) {
+    return res.status(400).json({ error: 'Missing fileId or token' });
+  }
+
+  try {
+    const driveUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
+    const headers: Record<string, string> = {
+      'Authorization': `Bearer ${token}`
+    };
+
+    if (req.headers.range) {
+      headers['Range'] = req.headers.range as string;
+    }
+
+    const driveRes = await fetch(driveUrl, { headers });
+
+    if (!driveRes.ok && driveRes.status !== 206) {
+      const errorText = await driveRes.text();
+      console.error(`Google Drive API returned error status ${driveRes.status}: ${errorText}`);
+      return res.status(driveRes.status).json({ error: `Google Drive API error: ${driveRes.status}` });
+    }
+
+    // Set relevant headers
+    if (driveRes.headers.get('content-type')) {
+      res.setHeader('Content-Type', driveRes.headers.get('content-type')!);
+    }
+    if (driveRes.headers.get('content-range')) {
+      res.setHeader('Content-Range', driveRes.headers.get('content-range')!);
+    }
+    if (driveRes.headers.get('content-length')) {
+      res.setHeader('Content-Length', driveRes.headers.get('content-length')!);
+    }
+    if (driveRes.headers.get('accept-ranges')) {
+      res.setHeader('Accept-Ranges', driveRes.headers.get('accept-ranges')!);
+    }
+
+    res.status(driveRes.status);
+
+    if (driveRes.body) {
+      // @ts-ignore
+      const reader = driveRes.body.getReader();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+          res.end();
+          break;
+        }
+        res.write(Buffer.from(value));
+      }
+    } else {
+      res.end();
+    }
+  } catch (error: any) {
+    console.error('Error streaming from Google Drive:', error);
+    if (!res.headersSent) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+});
+
 // Get all media items
 app.get('/api/media', (req, res) => {
   const db = readDb();
@@ -149,7 +212,7 @@ app.post('/api/media/upload', upload.single('mediaFile'), (req, res) => {
 // Add media by external URL
 app.post('/api/media/url', (req, res) => {
   try {
-    const { title, description, type, url } = req.body;
+    const { title, description, type, url, fileName } = req.body;
     if (!title || !type || !url) {
       return res.status(400).json({ error: 'Title, type, and URL are required' });
     }
@@ -161,7 +224,7 @@ app.post('/api/media/url', (req, res) => {
       description: description || '',
       type,
       url,
-      fileName: 'External Link',
+      fileName: fileName || 'External Link',
       date: new Date().toISOString().split('T')[0]
     };
 

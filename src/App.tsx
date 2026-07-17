@@ -6,6 +6,8 @@ import BirthdayHero from './components/BirthdayHero';
 import CustomPlayer from './components/CustomPlayer';
 import MediaGallery from './components/MediaGallery';
 import WishesSection from './components/WishesSection';
+import { initAuth, googleSignIn, logout } from './firebase';
+import { User } from 'firebase/auth';
 
 interface Particle {
   id: number;
@@ -23,6 +25,50 @@ export default function App() {
   const [particles, setParticles] = useState<Particle[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  // Firebase Auth states
+  const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = initAuth(
+      (currentUser, currentToken) => {
+        setUser(currentUser);
+        setToken(currentToken);
+      },
+      () => {
+        setUser(null);
+        setToken(null);
+      }
+    );
+    return () => unsubscribe();
+  }, []);
+
+  const handleLogin = async () => {
+    setIsLoggingIn(true);
+    try {
+      const result = await googleSignIn();
+      if (result) {
+        setUser(result.user);
+        setToken(result.accessToken);
+      }
+    } catch (err: any) {
+      console.error('Google login failed:', err);
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setUser(null);
+      setToken(null);
+    } catch (err) {
+      console.error('Logout failed:', err);
+    }
+  };
 
   // Fetch initial data
   useEffect(() => {
@@ -247,6 +293,11 @@ export default function App() {
                   onUploadFile={handleUploadFile}
                   onAddLink={handleAddLink}
                   onDeleteItem={handleDeleteItem}
+                  user={user}
+                  token={token}
+                  onLogin={handleLogin}
+                  onLogout={handleLogout}
+                  isLoggingIn={isLoggingIn}
                 />
               </div>
             </div>

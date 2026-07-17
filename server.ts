@@ -13,15 +13,25 @@ async function startServer() {
   const PORT = 3000;
 
   // Ensure directories exist
-  const uploadsDir = path.join(process.cwd(), 'uploads');
+  const isVercel = !!process.env.VERCEL || !!process.env.VERCEL_ENV;
+  const baseDir = isVercel ? '/tmp' : process.cwd();
+
+  const uploadsDir = path.join(baseDir, 'uploads');
   if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
   }
 
-  const dbPath = path.join(process.cwd(), 'db.json');
+  const dbPath = path.join(baseDir, 'db.json');
+  const initialDbPath = path.join(process.cwd(), 'db.json');
+
   function readDb() {
     try {
       if (!fs.existsSync(dbPath)) {
+        if (isVercel && fs.existsSync(initialDbPath)) {
+          const staticData = fs.readFileSync(initialDbPath, 'utf8');
+          fs.writeFileSync(dbPath, staticData);
+          return JSON.parse(staticData);
+        }
         const defaultDb = { wishes: [], media: [] };
         fs.writeFileSync(dbPath, JSON.stringify(defaultDb, null, 2));
         return defaultDb;

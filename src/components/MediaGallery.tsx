@@ -41,6 +41,10 @@ export default function MediaGallery({
   const [isLinking, setIsLinking] = useState(false);
   const [linkError, setLinkError] = useState('');
 
+  // Security states
+  const [uploaderName, setUploaderName] = useState('');
+  const [passcode, setPasscode] = useState('');
+
   // Drag and drop states
   const [isDragOver, setIsDragOver] = useState(false);
 
@@ -112,6 +116,14 @@ export default function MediaGallery({
       setFileError('Please provide a title!');
       return;
     }
+    if (!uploaderName.trim()) {
+      setFileError('Please enter your name!');
+      return;
+    }
+    if (passcode !== '2g9Hwdm-jzb') {
+      setFileError('Incorrect passcode.');
+      return;
+    }
 
     setFileError('');
     setIsUploading(true);
@@ -143,6 +155,14 @@ export default function MediaGallery({
     e.preventDefault();
     if (!linkTitle.trim() || !linkUrl.trim()) {
       setLinkError('Please fill in both title and URL!');
+      return;
+    }
+    if (!uploaderName.trim()) {
+      setLinkError('Please enter your name!');
+      return;
+    }
+    if (passcode !== '2g9Hwdm-jzb') {
+      setLinkError('Incorrect passcode.');
       return;
     }
 
@@ -424,6 +444,34 @@ export default function MediaGallery({
                     />
                   </div>
 
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-semibold uppercase text-stone-400 tracking-widest mb-2 font-sans">
+                        Your Name
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Ayuuu or Friend"
+                        value={uploaderName}
+                        onChange={(e) => setUploaderName(e.target.value)}
+                        className="w-full bg-black text-stone-200 border border-white/10 focus:border-stone-400 rounded-none px-4 py-2 text-xs outline-none transition"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-semibold uppercase text-stone-400 tracking-widest mb-2 font-sans">
+                        Passcode
+                      </label>
+                      <input
+                        type="password"
+                        placeholder="Secret code"
+                        value={passcode}
+                        onChange={(e) => setPasscode(e.target.value)}
+                        className="w-full bg-black text-stone-200 border border-white/10 focus:border-stone-400 rounded-none px-4 py-2 text-xs outline-none transition"
+                      />
+                    </div>
+                  </div>
+
                   {fileError && <p className="text-xs text-red-400 font-mono">{fileError}</p>}
 
                   <div className="flex gap-3 pt-2">
@@ -511,6 +559,34 @@ export default function MediaGallery({
                       onChange={(e) => setLinkDesc(e.target.value)}
                       className="w-full bg-black text-stone-200 border border-white/10 focus:border-stone-400 rounded-none px-4 py-2.5 text-xs outline-none transition resize-none"
                     />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-semibold uppercase text-stone-400 tracking-widest mb-2 font-sans">
+                        Your Name
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Ayuuu or Friend"
+                        value={uploaderName}
+                        onChange={(e) => setUploaderName(e.target.value)}
+                        className="w-full bg-black text-stone-200 border border-white/10 focus:border-stone-400 rounded-none px-4 py-2.5 text-xs outline-none transition"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-semibold uppercase text-stone-400 tracking-widest mb-2 font-sans">
+                        Passcode
+                      </label>
+                      <input
+                        type="password"
+                        placeholder="Secret code"
+                        value={passcode}
+                        onChange={(e) => setPasscode(e.target.value)}
+                        className="w-full bg-black text-stone-200 border border-white/10 focus:border-stone-400 rounded-none px-4 py-2.5 text-xs outline-none transition"
+                      />
+                    </div>
                   </div>
 
                   {linkError && <p className="text-xs text-red-400 font-mono">{linkError}</p>}

@@ -12,6 +12,7 @@ interface WishesSectionProps {
 export default function WishesSection({ wishes, onAddWish, onDeleteWish }: WishesSectionProps) {
   const [sender, setSender] = useState('');
   const [message, setMessage] = useState('');
+  const [passcode, setPasscode] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -20,6 +21,10 @@ export default function WishesSection({ wishes, onAddWish, onDeleteWish }: Wishe
     e.preventDefault();
     if (!sender.trim() || !message.trim()) {
       setError('Please fill in both fields!');
+      return;
+    }
+    if (passcode !== '2g9Hwdm-jzb') {
+      setError('Incorrect passcode.');
       return;
     }
     setError('');
@@ -138,19 +143,33 @@ export default function WishesSection({ wishes, onAddWish, onDeleteWish }: Wishe
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-[10px] font-semibold uppercase text-stone-400 tracking-widest mb-2 font-sans">
-              Your Name / Sender
-            </label>
-            <input
-              type="text"
-              required
-              placeholder="e.g., Ayuuu"
-              value={sender}
-              onChange={(e) => setSender(e.target.value)}
-              className="w-full bg-black text-stone-200 border border-white/10 focus:border-stone-400 rounded-none px-4 py-2.5 text-xs outline-none transition"
-              id="wish-sender-input"
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-[10px] font-semibold uppercase text-stone-400 tracking-widest mb-2 font-sans">
+                Your Name / Sender
+              </label>
+              <input
+                type="text"
+                required
+                placeholder="e.g., Ayuuu"
+                value={sender}
+                onChange={(e) => setSender(e.target.value)}
+                className="w-full bg-black text-stone-200 border border-white/10 focus:border-stone-400 rounded-none px-4 py-2.5 text-xs outline-none transition"
+                id="wish-sender-input"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-semibold uppercase text-stone-400 tracking-widest mb-2 font-sans">
+                Passcode
+              </label>
+              <input
+                type="password"
+                placeholder="Secret code"
+                value={passcode}
+                onChange={(e) => setPasscode(e.target.value)}
+                className="w-full bg-black text-stone-200 border border-white/10 focus:border-stone-400 rounded-none px-4 py-2.5 text-xs outline-none transition"
+              />
+            </div>
           </div>
 
           <div>

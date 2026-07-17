@@ -1,0 +1,42 @@
+{
+  "wishes": [
+    {
+      "id": "1",
+      "sender": "Ayuuu",
+      "message": "Happy Birthday to my amazing, incredible online sister, Curious! 🎂 You are one of the most talented, supportive, and kindest souls I've ever met in the digital world, Curiiii. Thank you for always being there, sharing your wonderful music, and lighting up my days. This special space is dedicated to you, to showcase all your beautiful songs and videos. May this year bring you endless joy, success, and music! Keep shining! 🌟",
+      "date": "2026-07-16"
+    },
+    {
+      "id": "2",
+      "sender": "Ayuuu",
+      "message": "To the best sister in the world, Curious: Distance might separate us, but our sibling bond is as real as it gets. I am so proud of your talent, your passion, and your beautiful voice, Curiiii. This website is a small gift from me to you, a place where all your art, songs, and videos can live and shine. Happy Birthday! 💖",
+      "date": "2026-07-16"
+    },
+    {
+      "id": "3",
+      "sender": "Ayuuu",
+      "message": "Cheers to another year of beautiful melodies and wonderful memories, Curiiii! 🥂 Every song you sing and every video you make has so much heart. I wanted to build this special gallery just for you, Curious, to keep them organized and let the world see how awesome you are. Hope you love this birthday surprise! 🎉",
+      "date": "2026-07-16"
+    }
+  ],
+  "media": [
+    {
+      "id": "demo-song",
+      "title": "Acoustic Joy (Demo Song)",
+      "description": "A warm, uplifting acoustic track to set the birthday celebration mood.",
+      "type": "audio",
+      "url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+      "fileName": "SoundHelix-Song-1.mp3",
+      "date": "2026-07-16"
+    },
+    {
+      "id": "demo-video",
+      "title": "Sparkler Celebration (Demo Video)",
+      "description": "A beautiful video of birthday sparklers to bring some magical light to your day.",
+      "type": "video",
+      "url": "https://assets.mixkit.co/videos/preview/mixkit-celebration-with-sparklers-and-champagne-3897-large.mp4",
+      "fileName": "mixkit-celebration.mp4",
+      "date": "2026-07-16"
+    }
+  ]
+}

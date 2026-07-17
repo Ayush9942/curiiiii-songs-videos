@@ -1,0 +1,6 @@
+{
+  "name": "Sister's Birthday Celebration",
+  "description": "A beautiful birthday website for a beloved sister, Curious (Curiiii), featuring wishes from ayuuu and an interactive media gallery for songs and videos.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
